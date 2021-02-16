@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ToDoController!{% endblock %}
+
+{% block body %}
+<h1>
+Hi Cunt!
+</h1>
+
+<ul>
+{% for todo in todos %} 
+<li>
+{{ todo.title }}
+</li>
+{% endfor %}
+</ul>
+
+
+{% endblock %}
