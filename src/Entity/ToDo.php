@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ToDoRepository;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -10,6 +11,13 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class ToDo
 {
+    
+    public function __construct()
+    {
+        $this->createdAt = new DateTime();
+        $this->isComplete = false;
+    }
+    
     /**
      * @ORM\Id
      * @ORM\GeneratedValue

@@ -2,10 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\ToDo;
+use App\Form\ToDoFormType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\ToDoRepository;
+use Symfony\Component\HttpFoundation\Request;
 
 class ToDoController extends AbstractController
 {
@@ -19,11 +22,39 @@ class ToDoController extends AbstractController
         $this->toDoRepository = $toDoRepository;
     }
 
+    /**
+     * @Route("/create", name="todo.create")
+     */
+    public function create(Request $request): Response
+    {
+        $todo = new ToDo();
+        $form = $this->createForm(ToDoFormType::class, $todo);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            // $form->getData() holds the submitted values
+            // but, the original $task variable has also been updated
+            $todo = $form->getData();
+
+            // ... perform some action, such as saving the task to the database
+            // for example, if Task is a Doctrine entity, save it!
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->persist($todo);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('todos');
+        }
+
+
+
+
+        return $this->render('to_do/create.html.twig', ['form' => $form->createView()]);
+    }
 
     /**
-     * @Route("/todo", name="to_do")
+     * @Route("/todos", name="todos")
      */
-    public function index(): Response
+    public function read(): Response
     {
         $todos = $this->toDoRepository->findAll(); 
         return $this->render('to_do/index.html.twig', [
