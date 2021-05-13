@@ -10,20 +10,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\ToDoRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Dompdf\Dompdf;
-
-// instantiate and use the dompdf class
-
-
-
-// (Optional) Setup the paper size and orientation
-$dompdf->setPaper('A4', 'landscape');
-
-// Render the HTML as PDF
-$dompdf->render();
-
-
-
-
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ToDoController extends AbstractController
 {
@@ -32,8 +21,7 @@ class ToDoController extends AbstractController
 
     public function __construct(
         ToDoRepository $toDoRepository
-    )
-    {
+    ) {
         $this->toDoRepository = $toDoRepository;
     }
 
@@ -50,13 +38,28 @@ class ToDoController extends AbstractController
             // $form->getData() holds the submitted values
             // but, the original $task variable has also been updated
             $todo = $form->getData();
+            $uploadfile = $form->get("upload")->getData();
+            if ($uploadfile && $uploadfile instanceof UploadedFile) {
+                try{
+                    $uploadfile->move(
+                        $this->getParameter('imageUploadPath'), 
+                        $uploadfile->getClientOriginalName()
+                    );
+                    $imagepath = $this->getParameter('imageUploadPath')."/".$uploadfile->getClientOriginalName();
+                    $todo->setImage($imagepath);
+                } catch (FileException $e) {
+                    dump($e);
+                }
+            } 
+            else {
+                $todo->setImage(null);
+            }
 
             // ... perform some action, such as saving the task to the database
             // for example, if Task is a Doctrine entity, save it!
-            $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($todo);
-            $entityManager->flush();
-
+            $entityManager = $this->getDoctrine()->getManager(); //getting the entity manager
+            $entityManager->persist($todo); //staging area
+            $entityManager->flush(); //saves it
             return $this->redirectToRoute('todos');
         }
         return $this->render('to_do/create.html.twig', ['form' => $form->createView()]);
@@ -67,23 +70,28 @@ class ToDoController extends AbstractController
      */
     public function read(): Response
     {
-        $todos = $this->toDoRepository->findAll(); 
+        $todos = $this->toDoRepository->findAll();
         return $this->render('to_do/index.html.twig', [
             'todos' => $todos
         ]);
     }
 
     /**
-     * @Route("/pdf", name="todos")
+     * @Route("/pdf", name="pdf.sample")
      */
-    public function pdf(): Response
+    public function pdf(): RedirectResponse
     {
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml(${'to_do/pdf.html.twig'});
-        
-        $todos = $this->toDoRepository->findAll(); 
-        return dompdf::render('to_do/pdf.html.twig', [
+        $todos = $this->toDoRepository->findAll();
+        $htmlTemplate = $this->renderView('to_do/sample.html.twig', [
+            'title' => 'Hello world,: you are beautiful!',
             'todos' => $todos
         ]);
+
+        $pdf = new Dompdf();
+        $pdf->loadHtml($htmlTemplate);
+        $pdf->render();
+        $pdf->stream();
+
+        return $this->redirectToRoute('todos');
     }
 }
