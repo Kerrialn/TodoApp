@@ -81,6 +81,9 @@ class ToDoController extends AbstractController
         $dompdf = new Dompdf();
         $dompdf->loadHtml(${'to_do/pdf.html.twig'});
         
-        return $this->render($dompdf->render());
+        $todos = $this->toDoRepository->findAll(); 
+        return dompdf::render('to_do/pdf.html.twig', [
+            'todos' => $todos
+        ]);
     }
 }
