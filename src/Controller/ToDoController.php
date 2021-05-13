@@ -10,20 +10,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\ToDoRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Dompdf\Dompdf;
-
-// instantiate and use the dompdf class
-
-
-
-// (Optional) Setup the paper size and orientation
-$dompdf->setPaper('A4', 'landscape');
-
-// Render the HTML as PDF
-$dompdf->render();
-
-
-
-
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class ToDoController extends AbstractController
 {
@@ -32,8 +19,7 @@ class ToDoController extends AbstractController
 
     public function __construct(
         ToDoRepository $toDoRepository
-    )
-    {
+    ) {
         $this->toDoRepository = $toDoRepository;
     }
 
@@ -67,20 +53,28 @@ class ToDoController extends AbstractController
      */
     public function read(): Response
     {
-        $todos = $this->toDoRepository->findAll(); 
+        $todos = $this->toDoRepository->findAll();
         return $this->render('to_do/index.html.twig', [
             'todos' => $todos
         ]);
     }
 
     /**
-     * @Route("/pdf", name="todos")
+     * @Route("/pdf", name="pdf.sample")
      */
-    public function pdf(): Response
+    public function pdf(): RedirectResponse
     {
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml(${'to_do/pdf.html.twig'});
-        
-        return $this->render($dompdf->render());
+        $todos = $this->toDoRepository->findAll();
+        $htmlTemplate = $this->renderView('to_do/sample.html.twig', [
+            'title' => 'Hello world,: you are beautiful!',
+            'todos' => $todos
+        ]);
+
+        $pdf = new Dompdf();
+        $pdf->loadHtml($htmlTemplate);
+        $pdf->render();
+        $pdf->stream();
+
+        return $this->redirectToRoute('todos');
     }
 }
