@@ -9,6 +9,21 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\ToDoRepository;
 use Symfony\Component\HttpFoundation\Request;
+use Dompdf\Dompdf;
+
+// instantiate and use the dompdf class
+
+
+
+// (Optional) Setup the paper size and orientation
+$dompdf->setPaper('A4', 'landscape');
+
+// Render the HTML as PDF
+$dompdf->render();
+
+
+
+
 
 class ToDoController extends AbstractController
 {
@@ -44,10 +59,6 @@ class ToDoController extends AbstractController
 
             return $this->redirectToRoute('todos');
         }
-
-
-
-
         return $this->render('to_do/create.html.twig', ['form' => $form->createView()]);
     }
 
@@ -60,5 +71,16 @@ class ToDoController extends AbstractController
         return $this->render('to_do/index.html.twig', [
             'todos' => $todos
         ]);
+    }
+
+    /**
+     * @Route("/pdf", name="todos")
+     */
+    public function pdf(): Response
+    {
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml(${'to_do/pdf.html.twig'});
+        
+        return $this->render($dompdf->render());
     }
 }
