@@ -13,16 +13,15 @@ use Dompdf\Dompdf;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use GuzzleHttp\Client;
+use App\Service\Api;
 
 class ToDoController extends AbstractController
 {
-
-    private $toDoRepository;
-
     public function __construct(
-        ToDoRepository $toDoRepository
+        private ToDoRepository $toDoRepository,
+        private Api $apiService
     ) {
-        $this->toDoRepository = $toDoRepository;
     }
 
     /**
@@ -69,10 +68,15 @@ class ToDoController extends AbstractController
      * @Route("/todos", name="todos")
      */
     public function read(): Response
-    {
+    {        
+        $client = new Client();
+        $response = $client->request('GET', $this->apiService->weather("Prague"));
+
+
         $todos = $this->toDoRepository->findAll();
         return $this->render('to_do/index.html.twig', [
-            'todos' => $todos
+            'todos' => $todos,
+            'weather' => $response->getBody()
         ]);
     }
 
