@@ -8,19 +8,18 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Repository\ToDoRepository;
+use App\Service\Api\WeatherApi;
 use Symfony\Component\HttpFoundation\Request;
 use Dompdf\Dompdf;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use GuzzleHttp\Client;
-use App\Service\Api;
 
 class ToDoController extends AbstractController
 {
     public function __construct(
         private ToDoRepository $toDoRepository,
-        private Api $apiService
+        private WeatherApi $weatherApi
     ) {
     }
 
@@ -39,18 +38,17 @@ class ToDoController extends AbstractController
             $todo = $form->getData();
             $uploadfile = $form->get("upload")->getData();
             if ($uploadfile && $uploadfile instanceof UploadedFile) {
-                try{
+                try {
                     $uploadfile->move(
-                        $this->getParameter('imageUploadPath'), 
+                        $this->getParameter('imageUploadPath'),
                         $uploadfile->getClientOriginalName()
                     );
-                    $imagepath = $this->getParameter('imageUploadPath')."/".$uploadfile->getClientOriginalName();
+                    $imagepath = $this->getParameter('imageUploadPath') . "/" . $uploadfile->getClientOriginalName();
                     $todo->setImage($imagepath);
                 } catch (FileException $e) {
                     dump($e);
                 }
-            } 
-            else {
+            } else {
                 $todo->setImage(null);
             }
 
@@ -68,10 +66,8 @@ class ToDoController extends AbstractController
      * @Route("/todos", name="todos")
      */
     public function read(): Response
-    {        
-        $client = new Client();
-        $response = $client->request('GET', $this->apiService->weather("Prague"));
-
+    {
+        $response = $this->weatherApi->connect(['city' => 'prague']);
 
         $todos = $this->toDoRepository->findAll();
         return $this->render('to_do/index.html.twig', [

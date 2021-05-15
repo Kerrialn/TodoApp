@@ -31,3 +31,10 @@ services:
     # please note that last definitions always *replace* previous ones
     App\Service\:
         resource: '../src/Service/'
+
+    App\Service\Api\:
+        resource: '../src/Service/Api/'
+        autowire: true
+
+        
+        
