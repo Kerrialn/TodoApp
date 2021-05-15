@@ -72,7 +72,7 @@ class ToDoController extends AbstractController
         $todos = $this->toDoRepository->findAll();
         return $this->render('to_do/index.html.twig', [
             'todos' => $todos,
-            'weather' => $response->getBody()
+            'response' => json_decode($response->getBody())
         ]);
     }
 
